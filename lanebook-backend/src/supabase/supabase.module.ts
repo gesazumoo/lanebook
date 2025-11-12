@@ -22,6 +22,9 @@ import { SupabaseService } from './supabase.service';
             autoRefreshToken: true,
             persistSession: false,
           },
+          db: {
+            schema: 'public',
+          },
         });
       },
       inject: [ConfigService],

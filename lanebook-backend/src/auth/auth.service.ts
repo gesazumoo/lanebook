@@ -125,10 +125,12 @@ export class AuthService {
       }
 
       // 2. app_user 테이블에서 유저 정보 가져오기
+      const userId = authData.user.id;
+
       const { data: appUser, error: appUserError } = await this.supabaseClient
         .from('app_user')
         .select('id, display_name, phone, created_at')
-        .eq('id', authData.user.id)
+        .eq('id', userId)
         .maybeSingle();
 
       if (appUserError) {
