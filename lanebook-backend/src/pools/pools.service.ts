@@ -1,6 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Inject } from '@nestjs/common';
+import { LaneScheduleStatus } from '../common/enums';
 
 @Injectable()
 export class PoolsService {
@@ -100,7 +101,7 @@ export class PoolsService {
       }
 
       // 날짜별로 그룹화하고 status별 집계 (조회된 데이터만)
-      // 가능: available, 진행중: pending, 마감: confirmed + unavailable
+      // 가능: available, 진행중: pending, 마감: confirmed + blocked
       const statsByDate: Record<
         string,
         { 가능: number; 진행중: number; 마감: number }
@@ -118,11 +119,14 @@ export class PoolsService {
         }
 
         const status = schedule.status?.toLowerCase() || '';
-        if (status === 'available') {
+        if (status === LaneScheduleStatus.AVAILABLE) {
           statsByDate[dateStr].가능++;
-        } else if (status === 'pending') {
+        } else if (status === LaneScheduleStatus.PENDING) {
           statsByDate[dateStr].진행중++;
-        } else if (status === 'confirmed' || status === 'unavailable') {
+        } else if (
+          status === LaneScheduleStatus.CONFIRMED ||
+          status === LaneScheduleStatus.BLOCKED
+        ) {
           statsByDate[dateStr].마감++;
         } else {
           // 다른 status는 마감으로 처리

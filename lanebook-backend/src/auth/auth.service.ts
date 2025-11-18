@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { SupabaseService } from '../supabase/supabase.service';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Inject } from '@nestjs/common';
+import { MembershipStatus, UseStatus } from '../common/enums';
 
 @Injectable()
 export class AuthService {
@@ -260,7 +261,7 @@ export class AuthService {
           .from('membership')
           .select('pool_id')
           .eq('admin_id', userId)
-          .eq('status', 'active'); // 활성화된 멤버십만
+          .eq('status', MembershipStatus.ACTIVE); // 활성화된 멤버십만
 
       if (membershipError) {
         throw new HttpException(
@@ -451,7 +452,7 @@ export class AuthService {
           id: userId,
           display_name: displayName,
           phone: phone,
-          status: 'use',
+          status: UseStatus.USE,
         });
 
         adminUserData = result.data;
@@ -495,7 +496,7 @@ export class AuthService {
           display_name: displayName,
           phone: phone,
           role: 'admin',
-          status: 'use',
+          status: UseStatus.USE,
         },
         message: 'Admin user created successfully',
       };
