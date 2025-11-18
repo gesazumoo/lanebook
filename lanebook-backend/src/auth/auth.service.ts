@@ -253,7 +253,53 @@ export class AuthService {
         );
       }
 
-      // 4. JWT 토큰 생성 (페이로드에 auth.user의 id와 role 포함)
+      // 4. membership 테이블에서 관리하는 수영장 정보 가져오기
+      // 4-1. membership에서 pool_id 목록 가져오기
+      const { data: membershipList, error: membershipError } =
+        await this.supabaseClient
+          .from('membership')
+          .select('pool_id')
+          .eq('admin_id', userId)
+          .eq('status', 'active'); // 활성화된 멤버십만
+
+      if (membershipError) {
+        throw new HttpException(
+          {
+            status: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: `Failed to fetch membership data: ${membershipError.message}`,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      // 4-2. pool_id 목록 추출
+      const poolIds =
+        membershipList?.map((m: any) => m.pool_id).filter(Boolean) || [];
+
+      // 4-3. pools 테이블에서 수영장 상세 정보 가져오기
+      let pools: any[] = [];
+      if (poolIds.length > 0) {
+        const { data: poolsData, error: poolsError } = await this.supabaseClient
+          .from('pools')
+          .select(
+            'id, name, desc, address, status, length, starting_block, region, created_at',
+          )
+          .in('id', poolIds);
+
+        if (poolsError) {
+          throw new HttpException(
+            {
+              status: HttpStatus.INTERNAL_SERVER_ERROR,
+              error: `Failed to fetch pool data: ${poolsError.message}`,
+            },
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+        }
+
+        pools = poolsData || [];
+      }
+
+      // 5. JWT 토큰 생성 (페이로드에 auth.user의 id와 role 포함)
       const accessToken = this.jwtService.sign({
         sub: authData.user.id,
         email: authData.user.email,
@@ -269,6 +315,7 @@ export class AuthService {
           role: 'admin',
           status: adminUser.status,
         },
+        pools: pools,
         accessToken,
       };
     } catch (error) {
