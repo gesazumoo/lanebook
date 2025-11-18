@@ -42,3 +42,18 @@ curl -X POST http://localhost:3000/auth/signin-admin \
     "email": "gesazumoo@gmail.com",
     "password": "12345678"
   }'
+
+# 전체 수영장 목록 조회
+curl -X GET http://localhost:3000/pools
+
+# 지역으로 필터링
+curl -X GET "http://localhost:3000/pools?region=서울"
+
+# 이름으로 검색
+curl -X GET "http://localhost:3000/pools?name=올림픽"
+
+# 지역과 이름으로 필터링 및 검색
+curl -X GET "http://localhost:3000/pools?region=서울&name=올림픽"
+
+# 수영장 레인 스케줄 집계 조회 (pool_id와 month 파라미터)
+curl -X GET "http://localhost:3000/pools/{pool_id}/lane-schedule-stats?month=11"

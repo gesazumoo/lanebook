@@ -46,6 +46,7 @@ CREATE TABLE public.lane_schedule (
   created_by uuid,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   price_amount numeric,
+  schedule_date date DEFAULT ((starts_at AT TIME ZONE 'Asia/Seoul'::text))::date,
   CONSTRAINT lane_schedule_pkey PRIMARY KEY (id),
   CONSTRAINT lane_schedule_pool_id_fkey FOREIGN KEY (pool_id) REFERENCES public.pools(id),
   CONSTRAINT lane_schedule_lane_id_fkey FOREIGN KEY (lane_id) REFERENCES public.lanes(id),
