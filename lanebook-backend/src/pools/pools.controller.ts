@@ -30,4 +30,13 @@ export class PoolsController {
   ) {
     return await this.poolsService.getLaneScheduleStats(poolId, month);
   }
+
+  @Get(':poolId/lane-schedule')
+  @HttpCode(HttpStatus.OK)
+  async getLaneScheduleDetail(
+    @Param('poolId') poolId: string,
+    @Query('date') date: string,
+  ) {
+    return await this.poolsService.getLaneScheduleDetail(poolId, date);
+  }
 }

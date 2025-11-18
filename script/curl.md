@@ -57,3 +57,6 @@ curl -X GET "http://localhost:3000/pools?region=서울&name=올림픽"
 
 # 수영장 레인 스케줄 집계 조회 (pool_id와 month 파라미터)
 curl -X GET "http://localhost:3000/pools/{pool_id}/lane-schedule-stats?month=11"
+
+# 특정 날짜의 상세 레인 스케줄 조회 (pool_id와 date 파라미터)
+curl -X GET "http://localhost:3000/pools/{pool_id}/lane-schedule?date=2025-11-01"
