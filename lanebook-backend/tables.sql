@@ -80,5 +80,6 @@ CREATE TABLE public.pools (
   address text,
   length USER-DEFINED NOT NULL DEFAULT '25m'::pool_length_enum,
   starting_block USER-DEFINED,
+  region USER-DEFINED,
   CONSTRAINT pools_pkey PRIMARY KEY (id)
 );

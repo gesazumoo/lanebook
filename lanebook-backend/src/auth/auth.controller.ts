@@ -28,10 +28,31 @@ export class AuthController {
     );
   }
 
+  @Post('signup-admin')
+  @HttpCode(HttpStatus.CREATED)
+  async signUpAdmin(@Body() signUpDto: SignUpDto) {
+    return await this.authService.signUpAdmin(
+      signUpDto.email,
+      signUpDto.password,
+      signUpDto.display_name,
+      signUpDto.phone,
+      signUpDto.metadata,
+    );
+  }
+
   @Post('signin')
   @HttpCode(HttpStatus.OK)
   async signIn(@Body() signInDto: SignInDto) {
     return await this.authService.signIn(signInDto.email, signInDto.password);
+  }
+
+  @Post('signin-admin')
+  @HttpCode(HttpStatus.OK)
+  async signInAdmin(@Body() signInDto: SignInDto) {
+    return await this.authService.signInAdmin(
+      signInDto.email,
+      signInDto.password,
+    );
   }
 
   @Post('signout')
