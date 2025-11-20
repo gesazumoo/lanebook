@@ -60,3 +60,15 @@ curl -X GET "http://localhost:3000/pools/{pool_id}/lane-schedule-stats?month=11"
 
 # 특정 날짜의 상세 레인 스케줄 조회 (pool_id와 date 파라미터)
 curl -X GET "http://localhost:3000/pools/{pool_id}/lane-schedule?date=2025-11-01"
+
+# 레인 스케줄 예약 (1-4개 스케줄 예약 가능)
+curl -X POST http://localhost:3000/reservations \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {access_token}" \
+  -d '{
+    "schedule_ids": [
+      "schedule_id_1",
+      "schedule_id_2",
+      "schedule_id_3"
+    ]
+  }'

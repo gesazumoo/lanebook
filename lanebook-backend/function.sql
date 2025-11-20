@@ -1,8 +1,3 @@
-CREATE OR REPLACE FUNCTION public.reserve_multiple_lanes(
-  p_user_id uuid,
-  p_schedule_ids uuid[]
-)
-RETURNS SETOF public.lane_reservation AS $$
 DECLARE
   v_schedule_id uuid;
   v_res         public.lane_reservation;
@@ -46,6 +41,11 @@ BEGIN
     RETURN NEXT v_res;
   END LOOP;
 
+  -- 🔽 여기서 한 번에 해당 스케줄들을 pending 으로 변경
+  UPDATE public.lane_schedule
+  SET status = 'pending'::lane_schedule_status_enum
+  WHERE id = ANY(p_schedule_ids);
+
   RETURN;
 
 EXCEPTION
@@ -54,4 +54,3 @@ EXCEPTION
     RAISE EXCEPTION 'slot_already_taken'
       USING ERRCODE = 'P0001';
 END;
-$$ LANGUAGE plpgsql;
