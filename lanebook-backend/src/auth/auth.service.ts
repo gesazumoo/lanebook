@@ -1,4 +1,12 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Injectable,
+  HttpException,
+  BadRequestException,
+  UnauthorizedException,
+  ForbiddenException,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { SupabaseService } from '../supabase/supabase.service';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -35,23 +43,11 @@ export class AuthService {
         });
 
       if (authError) {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            error: authError.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException(authError.message);
       }
 
       if (!authData.user) {
-        throw new HttpException(
-          {
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'User creation failed',
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+        throw new InternalServerErrorException('User creation failed');
       }
 
       // 2. app_user 테이블에 나머지 정보 저장
@@ -64,12 +60,8 @@ export class AuthService {
         });
 
       if (appUserError) {
-        throw new HttpException(
-          {
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: `Failed to create app_user: ${appUserError.message}`,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
+        throw new InternalServerErrorException(
+          `Failed to create app_user: ${appUserError.message}`,
         );
       }
 
@@ -86,12 +78,8 @@ export class AuthService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.message || 'Signup failed',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+      throw new InternalServerErrorException(
+        error.message || 'Signup failed',
       );
     }
   }
@@ -106,23 +94,13 @@ export class AuthService {
         });
 
       if (authError) {
-        throw new HttpException(
-          {
-            status: HttpStatus.UNAUTHORIZED,
-            error: authError.message || 'Invalid email or password',
-          },
-          HttpStatus.UNAUTHORIZED,
+        throw new UnauthorizedException(
+          authError.message || 'Invalid email or password',
         );
       }
 
       if (!authData.user) {
-        throw new HttpException(
-          {
-            status: HttpStatus.UNAUTHORIZED,
-            error: 'Authentication failed',
-          },
-          HttpStatus.UNAUTHORIZED,
-        );
+        throw new UnauthorizedException('Authentication failed');
       }
 
       // 2. app_user 테이블에서 유저 정보 가져오기
@@ -135,22 +113,14 @@ export class AuthService {
         .maybeSingle();
 
       if (appUserError) {
-        throw new HttpException(
-          {
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: `Failed to fetch user data: ${appUserError.message}`,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
+        throw new InternalServerErrorException(
+          `Failed to fetch user data: ${appUserError.message}`,
         );
       }
 
       if (!appUser) {
-        throw new HttpException(
-          {
-            status: HttpStatus.NOT_FOUND,
-            error: 'User profile not found. Please complete your registration.',
-          },
-          HttpStatus.NOT_FOUND,
+        throw new NotFoundException(
+          'User profile not found. Please complete your registration.',
         );
       }
 
@@ -173,12 +143,8 @@ export class AuthService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.message || 'Signin failed',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+      throw new InternalServerErrorException(
+        error.message || 'Signin failed',
       );
     }
   }
@@ -193,23 +159,13 @@ export class AuthService {
         });
 
       if (authError) {
-        throw new HttpException(
-          {
-            status: HttpStatus.UNAUTHORIZED,
-            error: authError.message || 'Invalid email or password',
-          },
-          HttpStatus.UNAUTHORIZED,
+        throw new UnauthorizedException(
+          authError.message || 'Invalid email or password',
         );
       }
 
       if (!authData.user) {
-        throw new HttpException(
-          {
-            status: HttpStatus.UNAUTHORIZED,
-            error: 'Authentication failed',
-          },
-          HttpStatus.UNAUTHORIZED,
-        );
+        throw new UnauthorizedException('Authentication failed');
       }
 
       // 2. admin_user 테이블에서 관리자 정보 가져오기
@@ -223,35 +179,21 @@ export class AuthService {
           .maybeSingle();
 
       if (adminUserError) {
-        throw new HttpException(
-          {
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: `Failed to fetch admin data: ${adminUserError.message}`,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
+        throw new InternalServerErrorException(
+          `Failed to fetch admin data: ${adminUserError.message}`,
         );
       }
 
       if (!adminUser) {
-        throw new HttpException(
-          {
-            status: HttpStatus.FORBIDDEN,
-            error: 'Admin profile not found. This account is not an admin.',
-          },
-          HttpStatus.FORBIDDEN,
+        throw new ForbiddenException(
+          'Admin profile not found. This account is not an admin.',
         );
       }
 
       // 3. role이 'admin'인지 확인 (metadata에서)
       const userRole = authData.user.user_metadata?.role;
       if (userRole !== 'admin') {
-        throw new HttpException(
-          {
-            status: HttpStatus.FORBIDDEN,
-            error: 'This account is not an admin account.',
-          },
-          HttpStatus.FORBIDDEN,
-        );
+        throw new ForbiddenException('This account is not an admin account.');
       }
 
       // 4. membership 테이블에서 관리하는 수영장 정보 가져오기
@@ -264,12 +206,8 @@ export class AuthService {
           .eq('status', MembershipStatus.ACTIVE); // 활성화된 멤버십만
 
       if (membershipError) {
-        throw new HttpException(
-          {
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: `Failed to fetch membership data: ${membershipError.message}`,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
+        throw new InternalServerErrorException(
+          `Failed to fetch membership data: ${membershipError.message}`,
         );
       }
 
@@ -288,12 +226,8 @@ export class AuthService {
           .in('id', poolIds);
 
         if (poolsError) {
-          throw new HttpException(
-            {
-              status: HttpStatus.INTERNAL_SERVER_ERROR,
-              error: `Failed to fetch pool data: ${poolsError.message}`,
-            },
-            HttpStatus.INTERNAL_SERVER_ERROR,
+          throw new InternalServerErrorException(
+            `Failed to fetch pool data: ${poolsError.message}`,
           );
         }
 
@@ -323,12 +257,8 @@ export class AuthService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.message || 'Admin signin failed',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+      throw new InternalServerErrorException(
+        error.message || 'Admin signin failed',
       );
     }
   }
@@ -340,23 +270,11 @@ export class AuthService {
       try {
         payload = this.jwtService.verify(accessToken);
       } catch (error) {
-        throw new HttpException(
-          {
-            status: HttpStatus.UNAUTHORIZED,
-            error: 'Invalid or expired token',
-          },
-          HttpStatus.UNAUTHORIZED,
-        );
+        throw new UnauthorizedException('Invalid or expired token');
       }
 
       if (!payload.sub) {
-        throw new HttpException(
-          {
-            status: HttpStatus.UNAUTHORIZED,
-            error: 'Invalid token payload',
-          },
-          HttpStatus.UNAUTHORIZED,
-        );
+        throw new UnauthorizedException('Invalid token payload');
       }
 
       // 2. Supabase에서 로그아웃 처리
@@ -375,12 +293,8 @@ export class AuthService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.message || 'Signout failed',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+      throw new InternalServerErrorException(
+        error.message || 'Signout failed',
       );
     }
   }
@@ -409,35 +323,17 @@ export class AuthService {
         });
 
       if (authError) {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            error: authError.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException(authError.message);
       }
 
       if (!authData.user) {
-        throw new HttpException(
-          {
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'User creation failed',
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+        throw new InternalServerErrorException('User creation failed');
       }
 
       // 사용자 ID 확인
       const userId = authData.user.id;
       if (!userId) {
-        throw new HttpException(
-          {
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'User ID is missing',
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+        throw new InternalServerErrorException('User ID is missing');
       }
 
       // 2. admin_user 테이블에 나머지 정보 저장 (status는 기본값 'use' 사용)
@@ -479,12 +375,8 @@ export class AuthService {
       }
 
       if (adminUserError) {
-        throw new HttpException(
-          {
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: `Failed to create admin_user: ${adminUserError.message}`,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
+        throw new InternalServerErrorException(
+          `Failed to create admin_user: ${adminUserError.message}`,
         );
       }
       console.log(adminUserData);
@@ -504,12 +396,8 @@ export class AuthService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.message || 'Admin signup failed',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+      throw new InternalServerErrorException(
+        error.message || 'Admin signup failed',
       );
     }
   }

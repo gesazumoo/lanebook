@@ -1,4 +1,10 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Injectable,
+  HttpException,
+  BadRequestException,
+  ConflictException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Inject } from '@nestjs/common';
 
@@ -12,23 +18,11 @@ export class ReservationsService {
     try {
       // 1. schedule_ids 검증 (1-4개)
       if (!scheduleIds || scheduleIds.length === 0) {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            error: 'At least one schedule ID is required',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('At least one schedule ID is required');
       }
 
       if (scheduleIds.length > 4) {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            error: 'Maximum 4 schedule IDs allowed',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('Maximum 4 schedule IDs allowed');
       }
 
       // 2. reserve_multiple_lanes 함수 호출 (PostgreSQL 함수)
@@ -45,47 +39,23 @@ export class ReservationsService {
 
         // 커스텀 에러 코드 확인
         if (errorMessage.includes('slot_already_taken')) {
-          throw new HttpException(
-            {
-              status: HttpStatus.CONFLICT,
-              error: 'One or more time slots are already reserved',
-            },
-            HttpStatus.CONFLICT,
+          throw new ConflictException(
+            'One or more time slots are already reserved',
           );
         } else if (errorMessage.includes('invalid_schedule_id')) {
-          throw new HttpException(
-            {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'Invalid schedule ID provided',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('Invalid schedule ID provided');
         } else if (errorMessage.includes('no_schedules')) {
-          throw new HttpException(
-            {
-              status: HttpStatus.BAD_REQUEST,
-              error: 'No schedules provided',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('No schedules provided');
         }
 
-        throw new HttpException(
-          {
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: `Reservation failed: ${errorMessage}`,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
+        throw new InternalServerErrorException(
+          `Reservation failed: ${errorMessage}`,
         );
       }
 
       if (!reservations || reservations.length === 0) {
-        throw new HttpException(
-          {
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Reservation failed: No reservations created',
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
+        throw new InternalServerErrorException(
+          'Reservation failed: No reservations created',
         );
       }
 
@@ -99,12 +69,8 @@ export class ReservationsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.message || 'Failed to create reservation',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+      throw new InternalServerErrorException(
+        error.message || 'Failed to create reservation',
       );
     }
   }

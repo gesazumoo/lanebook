@@ -1,4 +1,9 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Injectable,
+  HttpException,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Inject } from '@nestjs/common';
 import { LaneScheduleStatus } from '../common/enums';
@@ -30,12 +35,8 @@ export class PoolsService {
       const { data: pools, error } = await query;
 
       if (error) {
-        throw new HttpException(
-          {
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: `Failed to fetch pools: ${error.message}`,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
+        throw new InternalServerErrorException(
+          `Failed to fetch pools: ${error.message}`,
         );
       }
 
@@ -47,12 +48,8 @@ export class PoolsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.message || 'Failed to fetch pools',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+      throw new InternalServerErrorException(
+        error.message || 'Failed to fetch pools',
       );
     }
   }
@@ -61,13 +58,7 @@ export class PoolsService {
     try {
       // 월 유효성 검사
       if (month < 1 || month > 12) {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            error: 'Month must be between 1 and 12',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('Month must be between 1 and 12');
       }
 
       // 현재 연도 가져오기 (또는 파라미터로 받을 수도 있음)
@@ -91,12 +82,8 @@ export class PoolsService {
         .lte('schedule_date', endDateStr);
 
       if (error) {
-        throw new HttpException(
-          {
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: `Failed to fetch lane schedules: ${error.message}`,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
+        throw new InternalServerErrorException(
+          `Failed to fetch lane schedules: ${error.message}`,
         );
       }
 
@@ -152,12 +139,8 @@ export class PoolsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.message || 'Failed to fetch lane schedule stats',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+      throw new InternalServerErrorException(
+        error.message || 'Failed to fetch lane schedule stats',
       );
     }
   }
@@ -167,13 +150,7 @@ export class PoolsService {
       // 날짜 형식 검증 (YYYY-MM-DD)
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
       if (!dateRegex.test(date)) {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            error: 'Date must be in YYYY-MM-DD format',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('Date must be in YYYY-MM-DD format');
       }
 
       // lane_schedule 조회 (pool_id와 schedule_date로 필터링)
@@ -199,12 +176,8 @@ export class PoolsService {
         .order('starts_at', { ascending: true });
 
       if (error) {
-        throw new HttpException(
-          {
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: `Failed to fetch lane schedules: ${error.message}`,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
+        throw new InternalServerErrorException(
+          `Failed to fetch lane schedules: ${error.message}`,
         );
       }
 
@@ -282,12 +255,8 @@ export class PoolsService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.message || 'Failed to fetch lane schedule detail',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+      throw new InternalServerErrorException(
+        error.message || 'Failed to fetch lane schedule detail',
       );
     }
   }
