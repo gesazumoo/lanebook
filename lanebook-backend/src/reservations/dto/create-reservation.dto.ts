@@ -7,4 +7,3 @@ export class CreateReservationDto {
   @IsUUID('4', { each: true, message: 'Each schedule ID must be a valid UUID' })
   schedule_ids: string[];
 }
-
